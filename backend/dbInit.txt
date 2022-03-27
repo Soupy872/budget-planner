@@ -1,0 +1,24 @@
+CREATE TABLE users (
+    ID SERIAL PRIMARY KEY,
+    name VARCHAR(30),
+    email VARCHAR(30)
+);
+
+// how to handle subscriptions? 
+// https://stackoverflow.com/questions/23507200/good-practices-for-designing-monthly-subscription-system-in-database
+
+
+CREATE TABLE income (
+    ID SERIAL PRIMARY KEY,
+    userid INTEGER,
+    amount BIGINT,
+    frequency VARCHAR(30)
+);
+
+CREATE TABLE expense (
+    ID SERIAL PRIMARY KEY,
+    userid INTEGER,
+    amount BIGINT,
+    frequency VARCHAR(30),
+    categoryid INTEGER
+);
