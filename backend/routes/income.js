@@ -1,19 +1,7 @@
-const Pool = require('pg').Pool;
-const dotenv = require('dotenv');
-const { del } = require('express/lib/application');
-dotenv.config();
-
-// move config details to .env
-const pool = new Pool({
-    user: process.env.POOL_USER,
-    host: process.env.POOL_HOST,
-    database: process.env.POOL_DB,
-    password: process.env.POOL_PASSWORD,
-    port: process.env.PORT
-})
+let pool = require('../db');
 
 const getAllIncomes = (req, res) => {
-    const { userId } = req.params;
+    const userId = req.params.id;
 
     pool.query('SELECT * FROM income WHERE userid = $1 ORDER BY id ASC', [userId], (error, results) => {
         if (error) {
@@ -25,7 +13,8 @@ const getAllIncomes = (req, res) => {
 }
 
 const getIncomeById = (req, res) => {
-    const { userId, id } = req.params;
+    const userId = req.params.id;
+    const id = req.params.incomeId;
 
     pool.query("SELECT * FROM income WHERE id = $1, userid = $2", [id, userId], (error, results) => {
         if (error) {
@@ -37,7 +26,7 @@ const getIncomeById = (req, res) => {
 }
 
 const createIncome = (req, res) => {
-    const { userId } = req.params;
+    const userId = req.params.id;
     const { amount, frequency } = req.body;
 
     pool.query('INSERT INTO income (userid, amount, frequency) VALUES ($1, $2, $3)', 
@@ -52,7 +41,7 @@ const createIncome = (req, res) => {
 }
 
 const updateIncome = (req, res) => {
-    const { id } = req.params;
+    const id = req.params.incomeId;
     const { amount, frequency } = req.body;
 
     pool.query(
@@ -68,7 +57,7 @@ const updateIncome = (req, res) => {
 }
 
 const deleteIncome = (req, res) => {
-    const { id } = req.params;
+    const id = req.params.incomeId;
 
     pool.query('DELETE FROM income WHERE id = $1', [id], (error, results) => {
         if (error) {

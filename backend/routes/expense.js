@@ -1,18 +1,7 @@
-const Pool = require('pg').Pool;
-const dotenv = require('dotenv');
-dotenv.config();
-
-// move config details to .env
-const pool = new Pool({
-    user: process.env.POOL_USER,
-    host: process.env.POOL_HOST,
-    database: process.env.POOL_DB,
-    password: process.env.POOL_PASSWORD,
-    port: process.env.PORT
-})
+let pool = require('../db');
 
 const getAllExpenses = (req, res) => {
-    const { userId } = req.params;
+    const { userId } = req.params.id;
 
     pool.query('SELECT * FROM expense WHERE userid = $1 ORDER BY id ASC', [userId], (error, results) => {
         if (error) {
@@ -24,7 +13,8 @@ const getAllExpenses = (req, res) => {
 }
 
 const getExpenseById = (req, res) => {
-    const { userId, id } = req.params;
+    const userId = req.params.id;
+    const id = req.params.expenseId;
 
     pool.query("SELECT * FROM expense WHERE id = $1, userid = $2", [id, userId], (error, results) => {
         if (error) {
@@ -36,7 +26,7 @@ const getExpenseById = (req, res) => {
 }
 
 const createExpense = (req, res) => {
-    const { userId } = req.params;
+    const userId = req.params.id;
     const { amount, frequency, categoryId } = req.body;
 
     pool.query('INSERT INTO expense (userid, amount, frequency, categoryid) VALUES ($1, $2, $3, $4)', 
@@ -51,7 +41,7 @@ const createExpense = (req, res) => {
 }
 
 const updateExpense = (req, res) => {
-    const { id } = req.params;
+    const id = req.params.expenseId;
     const { amount, frequency, categoryId } = req.body;
 
     pool.query(
@@ -67,7 +57,7 @@ const updateExpense = (req, res) => {
 }
 
 const deleteExpense = (req, res) => {
-    const { id } = req.params;
+    const id = req.params.expenseId;
 
     pool.query('DELETE FROM expense WHERE id = $1', [id], (error, results) => {
         if (error) {

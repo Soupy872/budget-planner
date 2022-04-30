@@ -1,18 +1,7 @@
-const Pool = require('pg').Pool;
-const dotenv = require('dotenv');
-dotenv.config();
+const pool = require('../db');
 
-// move config details to .env
-const pool = new Pool({
-    user: process.env.POOL_USER,
-    host: process.env.POOL_HOST,
-    database: process.env.POOL_DB,
-    password: process.env.POOL_PASSWORD,
-    port: process.env.PORT
-})
-
-const getUsers = (req, res) => {
-    pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
+const getUsers = async (req, res) => {
+    await pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
         if (error) {
             throw error;
         }
@@ -32,17 +21,22 @@ const getUserById = (req, res) => {
         res.status(200).json(results.rows);
     })
 }
-
-const createUser = (req, res) => {
-    const { name, email } = req.body;
-
-    pool.query('INSERT INTO users (name, email) VALUES ($1, $2)', [name, email], (error, results) => {
-        if (error) {
-            throw error;
-        }
-
-        res.status(201).send(`User added with ID: ${result.insertId}`);
-    })
+// ON CONFLICT (email) DO UPDATE SET name = $1, email = $2, picture = $3
+const createUser = async (req, res) => {
+    const { name, email, picture } = req.body;
+    
+    try {
+        pool.query('INSERT INTO users (id, name, email, picture) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name = $2, email = $3, picture = $4', [userid, name, email.toLowerCase(), picture], (error, results) => {
+            if (error) {
+                throw error;
+            }
+            console.log(results)
+            res.status(201).send(`User added/updated with email: ${email.toLowerCase()}`);
+        })
+    } catch (e) {
+        console.log(e);
+    }
+    
 }
 
 const updateUser = (req, res) => {
@@ -50,8 +44,8 @@ const updateUser = (req, res) => {
     const { name, email } = req.body;
 
     pool.query(
-        'UPDATE users SET name = $1, email = $2 WHERE id = $3',
-        [name, email, id],
+        'UPDATE users SET name = $1, email = $2, picture = $3 WHERE id = $4',
+        [name, email, picture, id],
         (error, results) => {
             if (error) {
                 throw error;
