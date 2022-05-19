@@ -1,76 +1,70 @@
-const express = require('express');
+import express from "express";
+import mongodb from "mongodb";
+import dotenv from "dotenv";
+import cors from "cors";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import auth from "./middleware/auth.js";
 const app = express();
-const bodyParser = require('body-parser');
 const port = 8080;
-const pool = require('./db')
-const Users = require('./routes/users');
-const Income = require('./routes/income');
-const Expense = require('./routes/expense');
 
+import UsersCTRL from "./api/users.controller.js";
+import ExpensesCTRL from "./api/expenses.controller.js";
+import UsersDAO from "./dao/users.js";
+import ExpensesDAO from "./dao/expense.js";
+import IncomesDAO from "./dao/income.js";
+import IncomesCTRL from "./api/incomes.controller.js";
+
+const MongoClient = mongodb.MongoClient;
+dotenv.config();
+
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
     bodyParser.urlencoded({
         extended: true,
     })
 );
-
-app.use(async (req, res, next) => {
-    //await pool.query(`DROP TABLE users;`)
-    await pool.query(
-        `CREATE TABLE IF NOT EXISTS users (
-            ID SERIAL PRIMARY KEY,
-            name VARCHAR(30),
-            email VARCHAR(255) UNIQUE,
-            password VARCHAR(255),
-            picture VARCHAR(255)
-        );`
-    )
-    await pool.query(
-        `CREATE TABLE IF NOT EXISTS income (
-            ID SERIAL PRIMARY KEY,
-            userid INTEGER,
-            amount BIGINT,
-            frequency VARCHAR(30)
-        );`
-    )
-    await pool.query(
-        `CREATE TABLE IF NOT EXISTS expense (
-            ID SERIAL PRIMARY KEY,
-            userid INTEGER,
-            amount BIGINT,
-            frequency VARCHAR(30),
-            categoryid INTEGER
-        );`
-    )
+app.use(cors());
+app.use(function (req, res, next) {
+    const cookies = req.cookies;
+    res.set('Authorization', `Bearer ${cookies.headerPayload}.${cookies.signature}`);
     next();
 })
 
-app.get('/', (req, res) => {
-    res.json({ info: 'Node.js, Express, and Postgres API' })
-});
 
-app.get('/', (req, res) => {
-    res.send('Hello')
-})
+MongoClient.connect(
+    process.env.BDGT_DB_URI,
+    {
+        useNewUrlParser: true,
+    }
+    ).catch(err => {
+        console.log(err.stack);
+        process.exit(1);
+    })
+    .then(async client => {
+        await UsersDAO.injectDB(client);
+        await ExpensesDAO.injectDB(client);
+        await IncomesDAO.injectDB(client);
 
-app.get('/api/v1/user', Users.getUsers);
-app.get('/api/v1/user/:id', Users.getUserById);
-app.post('/api/v1/user', Users.createUser);
-app.put('/api/v1/user/:id', Users.updateUser)
-app.delete('/api/v1/user/:id', Users.deleteUser)
+        app.listen(port, () => {
+            console.log(`Listening on port ${port}`);
+        })
+    })
 
-app.get('/api/v1/user/:id/income', Income.getIncomes)
-app.get('/api/v1/user/:id/income/:incomeId', Income.getIncomeById);
-app.post('/api/v1/user/:id/income', Income.createIncome);
-app.put('/api/v1/user/:id/income/:incomeId', Income.updateIncome);
-app.delete('/api/v1/user/:id/income/:incomeId', Income.deleteIncome);
+app.post('/api/v1/register', UsersCTRL.apiUserRegister);
+app.post('/api/v1/login', UsersCTRL.apiUserLogin);
 
-app.get('/api/v1/user/:id/expense', Expense.getExpense);
-app.get('/api/v1/user/:id/expense/:expenseId', Expense.getExpenseById);
-app.post('/api/v1/user/:id/expense', Expense.createExpense);
-app.put('/api/v1/user/:id/expense/:expenseId', Expense.updateExpense);
-app.delete('/api/v1/user/:id/expense/:expenseId', Expense.deleteExpense);
+app.get('/api/v1/user', auth, UsersCTRL.apiGetUsers);
+app.put('/api/v1/user/:id', auth, UsersCTRL.apiUpdateUser)
+app.delete('/api/v1/user/:id', auth, UsersCTRL.apiDeleteUser)
 
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});
+app.get('/api/v1/user/:id/income', auth, IncomesCTRL.apiGetIncomes)
+app.post('/api/v1/user/:id/income', auth, IncomesCTRL.apiCreateIncome);
+app.put('/api/v1/user/:id/income/:incomeId', auth, IncomesCTRL.apiUpdateIncome);
+app.delete('/api/v1/user/:id/income/:incomeId', auth, IncomesCTRL.apiDeleteIncome);
+
+app.get('/api/v1/user/:id/expense', auth, ExpensesCTRL.apiGetExpenses);
+app.post('/api/v1/user/:id/expense', auth, ExpensesCTRL.apiCreateExpense);
+app.put('/api/v1/user/:id/expense/:expenseId', auth, ExpensesCTRL.apiUpdateExpense);
+app.delete('/api/v1/user/:id/expense/:expenseId', auth, ExpensesCTRL.apiDeleteExpense);
