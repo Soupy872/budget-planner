@@ -39,17 +39,24 @@ export default class UsersDAO {
             }
 
             const token = jwt.sign({ user_id: newUser._id, email },
-                process.env.TOKEN_KEY,
+                process.env.REFRESH_TOKEN_KEY,
                 {
-                    expiresIn: '24h',
+                    expiresIn: '5m',
+                }
+            );
+            const accessToken = jwt.sign(
+                { user_id: existingUser._id, email },
+                process.env.ACCESS_TOKEN_KEY,
+                {
+                    expiresIn: '1m',
                 }
             );
 
-            newUser.token = token;
+            newUser.refreshToken = [token];
             
             await users.insertOne(newUser);
 
-            return newUser;
+            return { newUser, refreshToken: token, accessToken };
         } catch (e) {
             console.log(e);
         }
@@ -65,15 +72,27 @@ export default class UsersDAO {
             if (existingUser && (await bcrypt.compare(password, existingUser.password))) {
                 const token = jwt.sign(
                     { user_id: existingUser._id, email },
-                    process.env.TOKEN_KEY,
+                    process.env.REFRESH_TOKEN_KEY,
                     {
-                        expiresIn: '2h',
+                        expiresIn: '10m',
+                    }
+                );
+                const accessToken = jwt.sign(
+                    { user_id: existingUser._id, email },
+                    process.env.ACCESS_TOKEN_KEY,
+                    {
+                        expiresIn: '1m',
                     }
                 );
 
-                existingUser.token = token;
+                const existingTokens = existingUser.refreshToken ? existingUser.refreshToken : [];
 
-                return existingUser;
+                await users.findOneAndUpdate(
+                    { _id: ObjectId(existingUser._id) }, 
+                    { $set: { refreshToken: [token, ...existingTokens] } }, 
+                    { upsert: true }
+                );
+                return { existingUser, refreshToken: token, accessToken };
             }
             return null;
         } catch (e) {
@@ -81,10 +100,69 @@ export default class UsersDAO {
         }
     }
 
+    static async logoutUser() {
+
+    }
+
+    static async assignNewRefreshToken (refresh) {
+        const existingUser = await users.findOne({ refreshToken: refresh })
+
+        if (!existingUser) {
+            // delete all tokens for this user
+            const decoded = jwt.verify(refresh, process.env.REFRESH_TOKEN_KEY);
+            await users.findOneAndUpdate(
+                { _id: ObjectId(decoded._id) }, 
+                { $set: { refreshToken: [] } }, 
+                { upsert: true }
+            );
+            return;
+        }
+
+        const existingTokens = existingUser.refreshToken.filter(tkn => tkn !== refresh);
+        try {
+            // verify token
+            const decoded = jwt.verify(refresh, process.env.REFRESH_TOKEN_KEY)
+
+            if (existingUser._id.toString() !== decoded.user_id) return;
+
+            const newRefresh = jwt.sign(
+                { user_id: existingUser._id, email: existingUser.email },
+                process.env.REFRESH_TOKEN_KEY,
+                {
+                    expiresIn: '10m'
+                }
+            );
+
+            const accessToken = jwt.sign(
+                { user_id: existingUser._id, email: existingUser.email },
+                process.env.ACCESS_TOKEN_KEY,
+                {
+                    expiresIn: '1m'
+                }
+            );
+            
+            await users.findOneAndUpdate(
+                { _id: ObjectId(existingUser._id) }, 
+                { $set: { refreshToken: [newRefresh, ...existingTokens] } }, 
+                { upsert: true }
+            )
+            return { accessToken, refreshToken: newRefresh };
+
+        } catch (err) {
+            // refreshToken expired
+            await users.findOneAndUpdate(
+                { _id: ObjectId(existingUser._id) }, 
+                { $set: { refreshToken: [...existingTokens] } }, 
+                { upsert: true }
+            );
+            return;
+        }    
+    }
+
     static async getUsers (user) {
         try {
             if (user) {
-                const { username, email } = await users.findOne({ _id: user });
+                const { username, email, _id } = await users.findOne({ _id: ObjectId(user) });
 
                 return { username, email, _id };
             }

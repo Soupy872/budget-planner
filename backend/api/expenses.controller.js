@@ -3,13 +3,14 @@ import ExpensesDAO from "../dao/expense.js";
 export default class ExpensesCTRL {
     static async apiGetExpenses (req, res, next) {
         try {
-            const userId = req.params.id;
+            const userId = req.user.user_id;
             const { days = 30 } = req.body;
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");
             }
             const response = await ExpensesDAO.getExpenses(userId, days);
+            console.log(response)
             res.json({ expenses: response });
         } catch(e) {
             console.log(e);
@@ -18,7 +19,7 @@ export default class ExpensesCTRL {
 
     static async apiCreateExpense (req, res, next) {
         try {
-            const userId = req.params.id;
+            const userId = req.user.user_id;
             const { name, amount, category, date, reoccuring } = req.body;
 
             if (!(userId && name && amount && category && date && reoccuring !== null)) {

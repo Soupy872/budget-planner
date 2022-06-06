@@ -6,27 +6,22 @@ export default class UsersController {
             const { email, username, password } = req.body;
 
             if (!(email && username && password)) {
-                return res.status(401).send('Missing Input Fields.');
+                return res.json({ status: 401 });
             }
-            const response = await UsersDAO.registerUser(email, username, password);
+            const { newUser, refreshToken, accessToken } = await UsersDAO.registerUser(email, username, password);
 
-            if (response) {
-                const [header, payload, signature] = response.token.split('.');
-                
-                return res.cookie(`signature`,`${signature}`,{
-                        maxAge: (1800000),
-                        secure: true,
-                        httpOnly: true,
-                        sameSite: 'lax'
-                    }).cookie(`headerPayload`,`${header}.${payload}`,{
-                        maxAge: (1800000),
-                        secure: true,
-                        httpOnly: false,
-                        sameSite: 'lax'
-                    })
-                    .json({ status: 'success', userId: response._id, email: response.email, username: response.username });
+            if (newUser) {
+                res.cookie('refresh',`${refreshToken}`,{
+                    maxAge: 1000 * 60 * 10,
+                    secure: true,
+                    httpOnly: true,
+                    sameSite: 'none'
+                });
+
+                return res.json({ status: 200, userId: newUser._id, email: newUser.email, username: newUser.username, accessToken });
+            } else {
+                return res.json({ status: 400 })
             }
-            return res.status(400).json({ status: "failure" })
         } catch(e) {
             console.log(`api: ${e}`);
         }
@@ -37,26 +32,22 @@ export default class UsersController {
             const { email, password } = req.body;
 
             if (!(email && password)) {
-                return res.status(401).send('Missing Input Fields.');
+                return res.send({ status: 401 });
             }
-            const response = await UsersDAO.loginUser(email, password);
-            if (response) {
-                const [header, payload, signature] = response.token.split('.');
-                
-                return res.cookie(`signature`,`${signature}`,{
-                        maxAge: (1800000),
-                        secure: true,
-                        httpOnly: true,
-                        sameSite: 'lax'
-                    }).cookie(`headerPayload`,`${header}.${payload}`,{
-                        maxAge: (1800000),
-                        secure: true,
-                        httpOnly: false,
-                        sameSite: 'lax'
-                    })
-                    .json({ status: 'success', userId: response._id, email: response.email, username: response.username });
+            const { existingUser, refreshToken, accessToken } = await UsersDAO.loginUser(email, password);
+            
+            if (existingUser) {
+                res.cookie('refresh',`${refreshToken}`,{
+                    maxAge: 1000 * 60 * 10,
+                    secure: true,
+                    httpOnly: true,
+                    sameSite: 'none'
+                });
+
+                return res.json({ status: 200, userId: existingUser._id, email: existingUser.email, username: existingUser.username, accessToken });
+            } else {
+                return res.json({ status: 403 });
             }
-            return res.status(403).json({ status: 'Invalid Credentials' });
         } catch(e) {
             console.log(`api: ${e}`);
         }
@@ -65,10 +56,9 @@ export default class UsersController {
     static async apiGetUsers (req, res, next) {
         try {
             const user = req.user;
-            console.log(user)
 
-            const response = await UsersDAO.getUsers(user);
-            res.json({ user: response });
+            const response = await UsersDAO.getUsers(user.user_id);
+            return res.json({ user: response });
         } catch(e) {
             console.log(e)
         }
@@ -76,14 +66,14 @@ export default class UsersController {
 
     static async apiUpdateUser (req, res, next) {
         try {
-            const id = req.params.id;
+            const user = req.user;
             const { username, password } = req.body;
 
             if (!(username && password)) {
                 return res.status(401).send('Missing Input Fields.');
             }
 
-            const response = await UsersDAO.updateUser(id, username, password);
+            const response = await UsersDAO.updateUser(user.user_id, username, password);
             res.json({ updatedUser: response })
         } catch(e) {
             console.log(e);
@@ -92,13 +82,13 @@ export default class UsersController {
 
     static async apiDeleteUser (req, res, next) {
         try {
-            const id = req.params.id;
+            const user = req.user;
             const { password } = req.body;
 
             if (!password) {
                 return res.status(401).send("Missing Password");
             }
-            const response = await UsersDAO.deleteUser(id, password);
+            const response = await UsersDAO.deleteUser(user.user_id, password);
             if (!response) {
                 return res.send("Incorrect Password.")
             }

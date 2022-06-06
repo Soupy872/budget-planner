@@ -14,6 +14,7 @@ import UsersDAO from "./dao/users.js";
 import ExpensesDAO from "./dao/expense.js";
 import IncomesDAO from "./dao/income.js";
 import IncomesCTRL from "./api/incomes.controller.js";
+import { apiRefreshToken } from "./api/refresh.controller.js";
 
 const MongoClient = mongodb.MongoClient;
 dotenv.config();
@@ -25,12 +26,24 @@ app.use(
         extended: true,
     })
 );
-app.use(cors());
-app.use(function (req, res, next) {
-    const cookies = req.cookies;
-    res.set('Authorization', `Bearer ${cookies.headerPayload}.${cookies.signature}`);
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "https://resplendent-faun-794855.netlify.app");
+    res.header("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,UPDATE,OPTIONS");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.setHeader('Content-Type', 'application/json');
     next();
-})
+  });
+app.use(cors({ credentials: true, origin: ["http://localhost:3000", "https://resplendent-faun-794855.netlify.app"] }))
+
+// app.use(function (req, res, next) {
+//     const cookies = req.cookies;
+//     console.log(cookies)
+//     const token = `${cookies.headerPayload}.${cookies.signature}`;
+//     console.log(token)
+//     req.headers['Authorization'] = `Bearer ${token}`
+//     next();
+// }) 
 
 
 MongoClient.connect(
@@ -54,17 +67,19 @@ MongoClient.connect(
 
 app.post('/api/v1/register', UsersCTRL.apiUserRegister);
 app.post('/api/v1/login', UsersCTRL.apiUserLogin);
+//app.post('/api/v1/logout', UsersCTRL.apiUserLogout);
+app.post('/api/v1/refreshtoken', apiRefreshToken);
 
 app.get('/api/v1/user', auth, UsersCTRL.apiGetUsers);
-app.put('/api/v1/user/:id', auth, UsersCTRL.apiUpdateUser)
-app.delete('/api/v1/user/:id', auth, UsersCTRL.apiDeleteUser)
+app.put('/api/v1/user', auth, UsersCTRL.apiUpdateUser)
+app.delete('/api/v1/user', auth, UsersCTRL.apiDeleteUser)
 
-app.get('/api/v1/user/:id/income', auth, IncomesCTRL.apiGetIncomes)
-app.post('/api/v1/user/:id/income', auth, IncomesCTRL.apiCreateIncome);
-app.put('/api/v1/user/:id/income/:incomeId', auth, IncomesCTRL.apiUpdateIncome);
-app.delete('/api/v1/user/:id/income/:incomeId', auth, IncomesCTRL.apiDeleteIncome);
+app.get('/api/v1/user/income', auth, IncomesCTRL.apiGetIncomes)
+app.post('/api/v1/user/income', auth, IncomesCTRL.apiCreateIncome);
+app.put('/api/v1/user/income/:incomeId', auth, IncomesCTRL.apiUpdateIncome);
+app.delete('/api/v1/user/income/:incomeId', auth, IncomesCTRL.apiDeleteIncome);
 
-app.get('/api/v1/user/:id/expense', auth, ExpensesCTRL.apiGetExpenses);
-app.post('/api/v1/user/:id/expense', auth, ExpensesCTRL.apiCreateExpense);
-app.put('/api/v1/user/:id/expense/:expenseId', auth, ExpensesCTRL.apiUpdateExpense);
-app.delete('/api/v1/user/:id/expense/:expenseId', auth, ExpensesCTRL.apiDeleteExpense);
+app.get('/api/v1/user/expense', auth, ExpensesCTRL.apiGetExpenses);
+app.post('/api/v1/user/expense', auth, ExpensesCTRL.apiCreateExpense);
+app.put('/api/v1/user/expense/:expenseId', auth, ExpensesCTRL.apiUpdateExpense);
+app.delete('/api/v1/user/expense/:expenseId', auth, ExpensesCTRL.apiDeleteExpense);

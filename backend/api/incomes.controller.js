@@ -3,13 +3,14 @@ import IncomesDAO from "../dao/income.js";
 export default class IncomesCTRL {
     static async apiGetIncomes (req, res, next) {
         try {
-            const userId = req.params.id;
+            const userId = req.user.user_id;
             const { days = 30 } = req.body;
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");
             }
             const response = await IncomesDAO.getIncomes(userId, days);
+            console.log(response)
             res.json({ incomes: response});
         } catch(e) {
             console.log(e);
@@ -18,7 +19,7 @@ export default class IncomesCTRL {
 
     static async apiCreateIncome (req, res, next) {
         try {
-            const userId = req.params.id;
+            const userId = req.user.user_id;
             const { name, amount, category, date, reoccuring } = req.body;
 
             if (!(userId && name && amount && category && date && reoccuring !== null)) {
