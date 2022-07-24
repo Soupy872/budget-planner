@@ -1,16 +1,18 @@
-import React, { useEffect, useReducer } from "react";
+import React, { useReducer } from "react";
   
-export const AuthContext = React.createContext();
+export const AuthContext = React.createContext({});
 
 const Reducer = (state, action) => {
     switch(action.type) {
-        case 'UPDATE_AUTH':
-            const token = { accessToken: action.payload?.accessToken || action.payload };
-            localStorage.setItem('token', JSON.stringify({ accessToken: token }));
+        case 'ADD_AUTH': {
             return {
-                auth: { accessToken: token }
-            };
-            default: throw new Error();
+                ...action.payload,
+            }
+        }
+        case 'DELETE_AUTH': {
+            return null;
+        }
+        default: throw new Error();
     };
 }
 

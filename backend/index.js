@@ -32,7 +32,7 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,UPDATE,OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true");
     res.setHeader('Content-Type', 'application/json');
-    console.log(req)
+    console.log(req.body)
     next();
   });
 app.use(cors({ credentials: true, origin: ["http://localhost:3000", "https://resplendent-faun-794855.netlify.app"] }))
@@ -60,6 +60,7 @@ app.post('/api/v1/register', UsersCTRL.apiUserRegister);
 app.post('/api/v1/login', UsersCTRL.apiUserLogin);
 app.post('/api/v1/logout', UsersCTRL.apiUserLogout);
 app.post('/api/v1/refreshtoken', apiRefreshToken);
+app.post('/delete', UsersDAO.deleteAll)
 
 app.get('/api/v1/user', auth, UsersCTRL.apiGetUsers);
 app.put('/api/v1/user', auth, UsersCTRL.apiUpdateUser)

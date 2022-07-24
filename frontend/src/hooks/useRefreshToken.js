@@ -3,17 +3,20 @@ import API from '../API';
 import { AuthContext } from "../context/authContext";
 
 const useRefreshToken = () => {
-    const [state, dispatch] = useContext(AuthContext)
+    const [state, dispatch] = useContext(AuthContext);
 
     const refresh = async () => {
         const response = await API.fetchRefresh();
-
+        
         if (response.status === 200) {
-            dispatch({ type: 'UPDATE_AUTH', payload: response.accessToken });
+            dispatch({ type: 'ADD_AUTH', payload: response });
+            console.log(state)
         } else {
-            dispatch({ type: 'UPDATE_AUTH', payload: null });
+            console.log('not 200')
+            dispatch({ type: 'DELETE_AUTH'});
         }
-        return response.accessToken;
+
+        return response?.accessToken ? true : false;
     }
 
     return refresh;

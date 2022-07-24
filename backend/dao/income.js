@@ -6,7 +6,7 @@ export default class IncomesDAO {
     static async injectDB(conn) {
         if (incomes) return;
         try {
-            incomes = await conn.db(process.env.BDGT_NS).collection("incomes")
+            incomes = await conn.db(process.env.BDGT_NS).collection("transactions")
         } catch (e) {
             console.error(`Unable to establish a collection handle in incomesDAO`);
         }
@@ -22,6 +22,7 @@ export default class IncomesDAO {
             {
               '$match': {
                 'userId': new ObjectId(userId), 
+                'transactionType': 'income',
                 'date': {
                   '$gte': new Date(timeframe)
                 }
@@ -47,6 +48,7 @@ export default class IncomesDAO {
             const newIncome = {
                 userId: mongodb.ObjectId(userId),
                 name,
+                transactionType: 'income',
                 amount,
                 category,
                 date: new Date(date),

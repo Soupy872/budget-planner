@@ -1,8 +1,8 @@
 import React from "react";
 
-import { Label1, Label2, Label3, Label4, Text, Wrapper } from "./FactSection.styles";
+import { Label1, Label2, Label3, Label4, Text, Wrapper } from "./Stats.styles";
 
-const FactSection = ({ income, largestExpCat, largestReocExp, percent}) => {
+const Stats = ({ income, largestExpCat, largestReocExp, percent}) => {
     percent = 4.03;
     return (
         <Wrapper>
@@ -26,4 +26,4 @@ const FactSection = ({ income, largestExpCat, largestReocExp, percent}) => {
     )
 }
 
-export default FactSection;
+export default Stats;

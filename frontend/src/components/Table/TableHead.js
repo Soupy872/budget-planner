@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import propTypes from 'prop-types';
-import { Wrapper } from './TableHead.styles';
 
 const TableHead = ({ columns, handleSorting }) => {
     const [sortField, setSortField] = useState("");
@@ -15,9 +13,9 @@ const TableHead = ({ columns, handleSorting }) => {
     }
 
     return (
-        <Wrapper>
+        <thead>
             <tr>
-                {columns.map(({ label, accessor, sortable }) => {
+                {columns?.map(({ label, accessor, sortable }) => {
                     return (
                     <th 
                         key={accessor}
@@ -27,7 +25,7 @@ const TableHead = ({ columns, handleSorting }) => {
                     </th>)
                 })}
             </tr>
-        </Wrapper>
+        </thead>
     )
 }
 

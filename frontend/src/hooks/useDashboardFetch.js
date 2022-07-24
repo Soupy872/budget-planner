@@ -6,7 +6,7 @@ export const useDashboardFetch = token => {
     const [state, setState] = useState(initialState);
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [tableData, setTableData] = useState();
+
     const initialState = {
         user: {
             userId: '',
@@ -62,5 +62,5 @@ export const useDashboardFetch = token => {
     }, [state])
     
 
-    return { state, loading, error, tableData, setTableData };
+    return { state, loading, error };
 }

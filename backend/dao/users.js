@@ -54,7 +54,7 @@ export default class UsersDAO {
 
             newUser.refreshToken = [token];
             
-            await users.insertOne(newUser);
+            users?.email && users?.username && users.password ? await users.insertOne(newUser) : null;
 
             return { newUser, refreshToken: token, accessToken };
         } catch (e) {
@@ -92,6 +92,7 @@ export default class UsersDAO {
                     { $set: { refreshToken: [token, ...existingTokens] } }, 
                     { upsert: true }
                 );
+                console.log(token)
                 return { existingUser, refreshToken: token, accessToken };
             }
             return null;
@@ -115,11 +116,13 @@ export default class UsersDAO {
         if (!existingUser) {
             // delete all tokens for this user
             const decoded = jwt.verify(refresh, process.env.REFRESH_TOKEN_KEY);
-            await users.findOneAndUpdate(
-                { _id: ObjectId(decoded._id) }, 
-                { $set: { refreshToken: [] } }, 
-                { upsert: true }
-            );
+            if (decoded.user_id) {
+                await users.findOneAndUpdate(
+                    { _id: ObjectId(decoded.user_id) }, 
+                    { $set: { refreshToken: [] } }, 
+                    { upsert: true }
+                );
+            }
             return;
         }
 
@@ -151,7 +154,7 @@ export default class UsersDAO {
                 { $set: { refreshToken: [newRefresh, ...existingTokens] } }, 
                 { upsert: true }
             )
-            return { accessToken, refreshToken: newRefresh };
+            return { accessToken, refreshToken: newRefresh, existingUser };
 
         } catch (err) {
             // refreshToken expired
@@ -216,6 +219,15 @@ export default class UsersDAO {
             return null;
         } catch(e) {
             console.log(e);
+        }
+    }
+
+    static async deleteAll () {
+        try {
+            await users.deleteMany({"email":{$nin: ['test2@test.com'] }})
+
+        } catch(e) {
+            console.log(e)
         }
     }
 }

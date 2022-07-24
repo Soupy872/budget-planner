@@ -1,5 +1,26 @@
 import { API_URL } from './config';
 
+const getConfig = (method, token, transactionInfo = null) => {
+    let config = {
+        method,
+        headers: {
+            'Content-type': 'application/json',
+        },
+        credentials: 'include'
+    }
+    if (token) config.headers['Authorization'] = `Bearer ${token}`
+    if (transactionInfo) { 
+            config = { ...config, body: JSON.stringify(transactionInfo) }
+    }
+    return config;
+};
+
+const apiCall = async (endpoint, token, transactionInfo, method = 'GET') => {
+    return await fetch(endpoint, getConfig(method, token, transactionInfo))
+        .then(response => response.json())
+        .catch(e => console.log(e));
+}
+
 const apiSettings = {
     fetchLogin: async (loginInfo) => {
         const endpoint = `${API_URL}/login`;
@@ -10,7 +31,7 @@ const apiSettings = {
             },
             body: JSON.stringify(loginInfo),
             credentials: 'include'
-        })).json();
+            })).json()
     },
     fetchRegister: async (registrationInfo) => {
         const endpoint = `${API_URL}/register`;
@@ -25,6 +46,7 @@ const apiSettings = {
     },
     fetchLogout: async () => {
         const endpoint = `${API_URL}/logout`;
+        console.log(endpoint);
         return await (await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -35,7 +57,6 @@ const apiSettings = {
     },
     fetchRefresh: async () => {
         const endpoint = `${API_URL}/refreshtoken`;
-        console.log(endpoint)
         return await (await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -47,17 +68,7 @@ const apiSettings = {
 
     fetchUser: async (token) => {
         const endpoint = `${API_URL}/user`;
-        console.log(token);
-        const resp = await (await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-            credentials: 'include'
-        })).json();
-        console.log(resp)
-        return resp;
+        return await apiCall(endpoint, token);
     },
     fetchUpdateUser: async (token) => {
         const endpoint = `${API_URL}/user`;
@@ -83,38 +94,17 @@ const apiSettings = {
     },
 
     fetchExpenses: async (token, days = 90) => {
+        const endpoint = `${API_URL}/user/expense?days=${days}`;
+        return await apiCall(endpoint, token);
+    },
+    fetchCreateExpense: async (token, transactionInfo) => {
         const endpoint = `${API_URL}/user/expense`;
-        return await (await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Body': `${days}`,
-        },
-            credentials: 'include'
-        })).json();
+        const method = 'POST';
+        return await apiCall(endpoint, token, transactionInfo, method);
     },
-    fetchCreateExpense: async (token, expenseId) => {
+    fetchUpdateExpense: async (token, expenseId, transactionInfo) => {
         const endpoint = `${API_URL}/user/expense/${expenseId}`;
-        return await (await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-            credentials: 'include'
-        })).json();
-    },
-    fetchUpdateExpense: async (token, expenseId) => {
-        const endpoint = `${API_URL}/user/expense/${expenseId}`;
-        return await (await fetch(endpoint, {
-            method: 'PUT',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-            credentials: 'include'
-        })).json();
+        return await apiCall(endpoint, token, transactionInfo);
     },
     fetchDeleteExpense: async (token, expenseId) => {
         const endpoint = `${API_URL}/user/expense/${expenseId}`;
@@ -129,38 +119,17 @@ const apiSettings = {
     },
 
     fetchIncomes: async (token, days = 90) => {
+        const endpoint = `${API_URL}/user/income?days=${days}`;
+        return await apiCall(endpoint, token);
+    },
+    fetchCreateIncome: async (token, transactionInfo) => {
         const endpoint = `${API_URL}/user/income`;
-        return await (await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Body': `${days}`,
-        },
-            credentials: 'include'
-        })).json();
+        const method = 'POST';
+        return await apiCall(endpoint, token, transactionInfo, method);
     },
-    fetchCreateIncome: async (token, incomeId) => {
+    fetchUpdateIncome: async (token, incomeId, transactionInfo) => {
         const endpoint = `${API_URL}/user/income/${incomeId}`;
-        return await (await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-            credentials: 'include'
-        })).json();
-    },
-    fetchUpdateIncome: async (token, incomeId) => {
-        const endpoint = `${API_URL}/user/income/${incomeId}`;
-        return await (await fetch(endpoint, {
-            method: 'PUT',
-            headers: {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-            credentials: 'include'
-        })).json();
+        return await apiCall(endpoint, token, transactionInfo);;
     },
     fetchDeleteIncome: async (token, incomeId) => {
         const endpoint = `${API_URL}/user/income/${incomeId}`;

@@ -4,14 +4,14 @@ export default class ExpensesCTRL {
     static async apiGetExpenses (req, res, next) {
         try {
             const userId = req.user.user_id;
-            const { days } = parseInt(req.headers['body']);
+            console.log(req.body)
+            const { days = 90 } = req.query;
             console.log(days)
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");
             }
             const response = await ExpensesDAO.getExpenses(userId, days);
-            console.log(response)
             res.json({ expenses: response });
         } catch(e) {
             console.log(e);

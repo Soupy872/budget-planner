@@ -1,34 +1,37 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import API from '../API';
 import { AuthContext } from "../context/authContext";
 
 const useAuth = () => {
     const [state, dispatch] = useContext(AuthContext);
 
-    const login = async ({ email, password }) => {
-        const response = await API.fetchLogin({ email, password });
-        console.log(response)
+    const login = async (loginInfo) => {
+        const response = await API.fetchLogin(loginInfo);
         if (response.status === 200) {
-            dispatch({ type: 'UPDATE_AUTH', payload: response.accessToken });
+            dispatch({ type: 'ADD_AUTH', payload: response });
+            console.log(state)
+            return true;
         } else {
-            dispatch({ type: 'UPDATE_AUTH', payload: null });
+            dispatch({ type: 'DELETE_AUTH'});
+            return false;
         }
     }
 
-    const register = async ({ email, password }) => {
-        const response = await API.fetchLogin({ email, password });
+    const register = async (registrationInfo) => {
+        const response = await API.fetchLogin(registrationInfo);
         if (response.status === 200) {
-            dispatch({ type: 'UPDATE_AUTH', payload: response.accessToken });
+            dispatch({ type: 'ADD_AUTH', payload: response });
+            return true;
         } else {
-            dispatch({ type: 'UPDATE_AUTH', payload: null });
+            dispatch({ type: 'DELETE_AUTH'});
+            return false;
         }
     }
 
     const logout = async () => {
+        localStorage.clear('persist');
         await API.fetchLogout();
-        dispatch({ type: 'UPDATE_AUTH', payload: null });
-        localStorage.clear('token');
-        sessionStorage.clear('user');
+        dispatch({ type: 'DELETE_AUTH'});
         return;
     }
 

@@ -18,7 +18,7 @@ export default class UsersController {
                     sameSite: 'none'
                 });
 
-                return res.json({ status: 200, userId: newUser._id, email: newUser.email, username: newUser.username, accessToken });
+                return res.json({ status: 200, userId: newUser._id, email: newUser.email, username: newUser.username, auth: { accessToken } });
             } else {
                 return res.json({ status: 400 })
             }
@@ -30,12 +30,13 @@ export default class UsersController {
     static async apiUserLogin (req, res, next) {
         try {
             const { email, password } = req.body;
+            console.log(email)
 
             if (!(email && password)) {
                 return res.send({ status: 401 });
             }
             const { existingUser, refreshToken, accessToken } = await UsersDAO.loginUser(email, password);
-            
+
             if (existingUser) {
                 res.cookie('refresh',`${refreshToken}`,{
                     maxAge: 1000 * 60 * 10,
@@ -43,9 +44,8 @@ export default class UsersController {
                     httpOnly: true,
                     sameSite: 'none'
                 });
-                console.log(accessToken)
 
-                return res.json({ status: 200, userId: existingUser._id, email: existingUser.email, username: existingUser.username, accessToken });
+                return res.json({ status: 200, email: existingUser.email, username: existingUser.username, auth: { accessToken } });
             } else {
                 return res.json({ status: 403 });
             }
@@ -57,10 +57,12 @@ export default class UsersController {
     static async apiUserLogout (req, res, next) {
         try {
             const refresh = req.cookies.refresh;
-            res.clearCookie('refresh');
-
+            console.log(refresh);
             if (!refresh) return res.json({ status: 401 })
             await UsersDAO.userLogout(refresh);
+
+            res.clearCookie('refresh', { httpOnly: true, secure: true,  sameSite: 'None' });
+            res.sendStatus(204);
         } catch(e) {
             console.log(`api: ${e}`)
         }

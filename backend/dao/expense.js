@@ -6,7 +6,7 @@ export default class ExpensesDAO {
     static async injectDB(conn) {
         if (expenses) return;
         try {
-            expenses = await conn.db(process.env.BDGT_NS).collection("expenses")
+            expenses = await conn.db(process.env.BDGT_NS).collection("transactions")
         } catch (e) {
             console.error(`Unable to establish a collection handle in expensesDAO`);
         }
@@ -21,7 +21,8 @@ export default class ExpensesDAO {
         let pipeline = [
             {
               '$match': {
-                'userId': new ObjectId(userId), 
+                'userId': new ObjectId(userId),
+                'transactionType': 'expense', 
                 'date': {
                   '$gte': new Date(timeframe)
                 }
@@ -47,6 +48,7 @@ export default class ExpensesDAO {
             const newExpense = {
                 userId: mongodb.ObjectId(userId),
                 name,
+                transactionType: 'expense',
                 amount,
                 category,
                 date: new Date(date),

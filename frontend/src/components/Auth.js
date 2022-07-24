@@ -3,14 +3,19 @@ import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { AuthContext } from "../context/authContext";
 
 const Auth = () => {
-    const [state, dispatch] = useContext(AuthContext);
+    const [state] = useContext(AuthContext);
     const location = useLocation();
+
+    const noToken = () => {
+        sessionStorage.setItem('user', null);
+        return (<Navigate to='/login' state={ { from: location } } replace />);
+    }
 
     return (
         state?.auth?.accessToken ? (
             <Outlet />
         ) : (
-            <Navigate to='/login' state={ { from: location } } replace />
+            noToken()
         )
     )
 }

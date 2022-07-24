@@ -4,13 +4,12 @@ export default class IncomesCTRL {
     static async apiGetIncomes (req, res, next) {
         try {
             const userId = req.user.user_id;
-            const { days = 30 } = req.headers['body'];
+            const { days = 90 } = req.query;
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");
             }
             const response = await IncomesDAO.getIncomes(userId, days);
-            console.log(response)
             res.json({ incomes: response});
         } catch(e) {
             console.log(e);

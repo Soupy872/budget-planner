@@ -5,6 +5,7 @@ const verifyToken = (req, res, next) => {
     const token = req.headers["authorization"].substring(7);
 
     if (!token) {
+        console.log('no token')
         return res.json({ status: 401, statusMessage: "A valid token is required for authorization. Please login."});
     }
 
