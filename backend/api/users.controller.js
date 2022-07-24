@@ -43,6 +43,7 @@ export default class UsersController {
                     httpOnly: true,
                     sameSite: 'none'
                 });
+                console.log(accessToken)
 
                 return res.json({ status: 200, userId: existingUser._id, email: existingUser.email, username: existingUser.username, accessToken });
             } else {
@@ -50,6 +51,18 @@ export default class UsersController {
             }
         } catch(e) {
             console.log(`api: ${e}`);
+        }
+    }
+
+    static async apiUserLogout (req, res, next) {
+        try {
+            const refresh = req.cookies.refresh;
+            res.clearCookie('refresh');
+
+            if (!refresh) return res.json({ status: 401 })
+            await UsersDAO.userLogout(refresh);
+        } catch(e) {
+            console.log(`api: ${e}`)
         }
     }
 

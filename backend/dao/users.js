@@ -100,8 +100,13 @@ export default class UsersDAO {
         }
     }
 
-    static async logoutUser() {
-
+    static async userLogout({ refresh }) {
+        try {
+            await users.findOneAndDelete({ refreshToken: refresh });
+            return;
+        } catch(e) {
+            console.log(e);
+        }
     }
 
     static async assignNewRefreshToken (refresh) {

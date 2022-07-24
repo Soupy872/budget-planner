@@ -4,7 +4,8 @@ export default class ExpensesCTRL {
     static async apiGetExpenses (req, res, next) {
         try {
             const userId = req.user.user_id;
-            const { days = 30 } = req.body;
+            const { days } = parseInt(req.headers['body']);
+            console.log(days)
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");

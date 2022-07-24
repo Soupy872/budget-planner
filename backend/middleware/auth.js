@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 const config = process.env;
 
 const verifyToken = (req, res, next) => {
-    console.log(req.headers)
     const token = req.headers["authorization"].substring(7);
 
     if (!token) {
@@ -13,7 +12,8 @@ const verifyToken = (req, res, next) => {
         const decoded = jwt.verify(token, config.ACCESS_TOKEN_KEY);
         req.user = decoded;
     } catch (e) {
-        return res.json({ status: 401, statusMessage: "Invalid token. Please login."});
+        console.log(e)
+        return res.json({ status: 403, statusMessage: "Invalid token."});
     }
 
     return next();

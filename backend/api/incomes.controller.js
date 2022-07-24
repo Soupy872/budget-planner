@@ -4,7 +4,7 @@ export default class IncomesCTRL {
     static async apiGetIncomes (req, res, next) {
         try {
             const userId = req.user.user_id;
-            const { days = 30 } = req.body;
+            const { days = 30 } = req.headers['body'];
 
             if (!userId) {
                 return res.status(401).send("Missing UserId.");

@@ -32,19 +32,10 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,UPDATE,OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true");
     res.setHeader('Content-Type', 'application/json');
+    console.log(req)
     next();
   });
 app.use(cors({ credentials: true, origin: ["http://localhost:3000", "https://resplendent-faun-794855.netlify.app"] }))
-
-// app.use(function (req, res, next) {
-//     const cookies = req.cookies;
-//     console.log(cookies)
-//     const token = `${cookies.headerPayload}.${cookies.signature}`;
-//     console.log(token)
-//     req.headers['Authorization'] = `Bearer ${token}`
-//     next();
-// }) 
-
 
 MongoClient.connect(
     process.env.BDGT_DB_URI,
@@ -67,7 +58,7 @@ MongoClient.connect(
 
 app.post('/api/v1/register', UsersCTRL.apiUserRegister);
 app.post('/api/v1/login', UsersCTRL.apiUserLogin);
-//app.post('/api/v1/logout', UsersCTRL.apiUserLogout);
+app.post('/api/v1/logout', UsersCTRL.apiUserLogout);
 app.post('/api/v1/refreshtoken', apiRefreshToken);
 
 app.get('/api/v1/user', auth, UsersCTRL.apiGetUsers);
